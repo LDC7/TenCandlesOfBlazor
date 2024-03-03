@@ -5,4 +5,3 @@ namespace TenCandlesOfBlazor.Data;
 public class ApplicationUser : IdentityUser
 {
 }
-

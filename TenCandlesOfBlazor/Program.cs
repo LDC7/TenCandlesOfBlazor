@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -12,37 +13,46 @@ using TenCandlesOfBlazor.Components.Account;
 using TenCandlesOfBlazor.Data;
 
 namespace TenCandlesOfBlazor;
-public class Program
+
+public sealed class Program
 {
-  public static void Main(string[] args)
+  public static async Task Main(string[] args)
   {
     var builder = WebApplication.CreateBuilder(args);
 
-    // Add services to the container.
-    builder.Services.AddRazorComponents()
-        .AddInteractiveServerComponents();
+    builder.Services
+      .AddRazorComponents()
+      .AddInteractiveServerComponents();
 
-    builder.Services.AddCascadingAuthenticationState();
-    builder.Services.AddScoped<IdentityUserAccessor>();
-    builder.Services.AddScoped<IdentityRedirectManager>();
-    builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+    builder.Services
+      .AddCascadingAuthenticationState()
+      .AddScoped<IdentityUserAccessor>()
+      .AddScoped<IdentityRedirectManager>()
+      .AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
-    builder.Services.AddAuthentication(options =>
-        {
-          options.DefaultScheme = IdentityConstants.ApplicationScheme;
-          options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-        })
-        .AddIdentityCookies();
+    builder.Services
+      .AddAuthentication(options =>
+      {
+        options.DefaultScheme = IdentityConstants.ApplicationScheme;
+        options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+      })
+      .AddIdentityCookies();
 
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
-    builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+      ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-    builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-        .AddEntityFrameworkStores<ApplicationDbContext>()
-        .AddSignInManager()
-        .AddDefaultTokenProviders();
+    builder.Services
+      .AddDbContext<ApplicationDbContext>(options =>
+      {
+        options.UseSqlServer(connectionString);
+      })
+      .AddDatabaseDeveloperPageExceptionFilter();
+
+    builder.Services
+      .AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+      .AddEntityFrameworkStores<ApplicationDbContext>()
+      .AddSignInManager()
+      .AddDefaultTokenProviders();
 
     builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
@@ -66,11 +76,11 @@ public class Program
     app.UseAntiforgery();
 
     app.MapRazorComponents<App>()
-        .AddInteractiveServerRenderMode();
+      .AddInteractiveServerRenderMode();
 
     // Add additional endpoints required by the Identity /Account Razor components.
     app.MapAdditionalIdentityEndpoints();
 
-    app.Run();
+    await app.RunAsync();
   }
 }
