@@ -1,34 +1,50 @@
 using System;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TenCandlesOfBlazor.Areas.Identity;
+using TenCandlesOfBlazor.Components;
+using TenCandlesOfBlazor.Components.Account;
 using TenCandlesOfBlazor.Data;
 
 namespace TenCandlesOfBlazor;
-
-public sealed class Program
+public class Program
 {
-  public async static Task Main(string[] args)
+  public static void Main(string[] args)
   {
     var builder = WebApplication.CreateBuilder(args);
 
     // Add services to the container.
+    builder.Services.AddRazorComponents()
+        .AddInteractiveServerComponents();
+
+    builder.Services.AddCascadingAuthenticationState();
+    builder.Services.AddScoped<IdentityUserAccessor>();
+    builder.Services.AddScoped<IdentityRedirectManager>();
+    builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+
+    builder.Services.AddAuthentication(options =>
+        {
+          options.DefaultScheme = IdentityConstants.ApplicationScheme;
+          options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+        })
+        .AddIdentityCookies();
+
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseSqlServer(connectionString));
     builder.Services.AddDatabaseDeveloperPageExceptionFilter();
-    builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
-        .AddEntityFrameworkStores<ApplicationDbContext>();
-    builder.Services.AddRazorPages();
-    builder.Services.AddServerSideBlazor();
-    builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
-    builder.Services.AddSingleton<WeatherForecastService>();
+
+    builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+        .AddEntityFrameworkStores<ApplicationDbContext>()
+        .AddSignInManager()
+        .AddDefaultTokenProviders();
+
+    builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
     var app = builder.Build();
 
@@ -47,16 +63,14 @@ public sealed class Program
     app.UseHttpsRedirection();
 
     app.UseStaticFiles();
+    app.UseAntiforgery();
 
-    app.UseRouting();
+    app.MapRazorComponents<App>()
+        .AddInteractiveServerRenderMode();
 
-    app.UseAuthentication();
-    app.UseAuthorization();
+    // Add additional endpoints required by the Identity /Account Razor components.
+    app.MapAdditionalIdentityEndpoints();
 
-    app.MapControllers();
-    app.MapBlazorHub();
-    app.MapFallbackToPage("/_Host");
-
-    await app.RunAsync();
+    app.Run();
   }
 }
