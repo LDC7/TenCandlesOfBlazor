@@ -1,23 +1,25 @@
-﻿@inherits LayoutComponentBase
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Http
 
-<div class="page">
-  <div class="sidebar">
-    <NavMenu />
-  </div>
+@inherits LayoutComponentBase
 
-  <main>
-    <div class="top-row px-4">
-      <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<div class="main-layout">
+  <header class="header">
+    <NavLink class="logo" href="">
+      CANDLE_LOGO
+    </NavLink>
+    <div class="account-container">
+      <AuthorizeView>
+        <Authorized>
+          Выпадашка с логаутом
+        </Authorized>
+      </AuthorizeView>
     </div>
+  </header>
 
-    <article class="content px-4">
-      @Body
-    </article>
+  <main class="main-container">
+    @Body
   </main>
-</div>
-
-<div id="blazor-error-ui">
-  An unhandled error has occurred.
-  <a href="" class="reload">Reload</a>
-  <a class="dismiss">🗙</a>
 </div>

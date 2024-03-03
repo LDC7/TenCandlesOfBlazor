@@ -1,9 +1,89 @@
 ﻿@page "/"
 
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Logging
+@using System.ComponentModel.DataAnnotations
+@using TenCandlesOfBlazor.Components.Account
+@using TenCandlesOfBlazor.Components.Account.Shared
+@using TenCandlesOfBlazor.Data
+
+@inject ILogger<Home> Logger
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityRedirectManager RedirectManager
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1 class="title">
+  10 Свечей
+</h1>
+<div class="home-page">
+  <div class="game-rules-container">
+    <h2>Rules:</h2>
+  </div>
+  <div class="login-container">
+    <StatusMessage Message="@this.errorMessage" />
+    <EditForm Model="Input" method="post" OnValidSubmit="this.LoginUser" FormName="login">
+      <ValidationSummary class="text-danger" role="alert" />
+      <div class="input-container">
+        <label for="username" class="input-label">Username:</label>
+        <InputText @bind-Value="this.Input.Username" class="input-control" autocomplete="username" aria-required="true" placeholder="username" />
+        <ValidationMessage For="() => this.Input.Username" class="text-danger" />
+      </div>
+      <div class="input-container">
+        <label for="password" class="input-label">Password:</label>
+        <InputText type="password" @bind-Value="this.Input.Password" class="input-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+        <ValidationMessage For="() => this.Input.Password" class="text-danger" />
+      </div>
+      <div>
+        <button type="submit" class="button">Log in</button>
+      </div>
+    </EditForm>
+  </div>
+</div>
 
-Welcome to your new app.
+@code {
+  private const string MainPage = "/main";
+
+  private string? errorMessage;
+
+  [CascadingParameter]
+  private HttpContext? HttpContext { get; set; }
+
+  [SupplyParameterFromForm]
+  private InputModel Input { get; set; } = new();
+
+  protected override void OnInitialized()
+  {
+    base.OnInitialized();
+    if (this.HttpContext.User.Identity != null)
+      this.RedirectManager.RedirectTo(MainPage);
+  }
+
+  protected async Task LoginUser()
+  {
+    var result = await this.SignInManager.PasswordSignInAsync(this.Input.Username!, this.Input.Password!, true, false);
+    if (result.Succeeded)
+    {
+      this.Logger.LogInformation("User logged in.");
+      this.RedirectManager.RedirectTo(MainPage);
+    }
+    else
+    {
+      this.Logger.LogInformation("Invalid login attempt.");
+      this.errorMessage = "Error: Invalid login attempt.";
+    }
+  }
+
+  private sealed class InputModel
+  {
+    [Required]
+    public string? Username { get; set; }
+
+    [Required]
+    [DataType(DataType.Password)]
+    public string? Password { get; set; }
+  }
+}

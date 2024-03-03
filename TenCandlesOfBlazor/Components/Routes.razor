@@ -1,13 +1,13 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
-@using TenCandlesOfBlazor.Components.Account.Shared
 @using TenCandlesOfBlazor.Components.Layout
+@using TenCandlesOfBlazor.Components.Shared
 
 <Router AppAssembly="typeof(Program).Assembly">
   <Found Context="routeData">
     <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)">
       <NotAuthorized>
-        <RedirectToLogin />
+        <RedirectToHome />
       </NotAuthorized>
     </AuthorizeRouteView>
     <FocusOnNavigate RouteData="routeData" Selector="h1" />

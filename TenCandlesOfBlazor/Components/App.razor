@@ -24,9 +24,17 @@
 
 @code {
   [CascadingParameter]
-  private HttpContext HttpContext { get; set; } = default!;
+  private HttpContext? HttpContext { get; set; }
 
-  private IComponentRenderMode? RenderModeForPage => this.HttpContext.Request.Path.StartsWithSegments("/Account")
-    ? null
-    : RenderMode.InteractiveServer;
+  private IComponentRenderMode? RenderModeForPage
+  {
+    get
+    {
+      // Не интерактивим на стартовой странице.
+      if (this.HttpContext?.Request.Path == "/")
+        return null;
+
+      return RenderMode.InteractiveServer;
+    }
+  }
 }
