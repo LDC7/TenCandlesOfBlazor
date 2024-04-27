@@ -1,0 +1,20 @@
+{
+  "version": "0.1.0",
+  "configurations": [
+    {
+      "name": "C#: TenCandlesOfBlazor Debug",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/TenCandlesOfBlazor/TenCandlesOfBlazor.csproj"
+    },
+    {
+      "name": "Docker .NET Container SDK Launch",
+      "type": "docker",
+      "request": "launch",
+      "netCore": {
+        "appProject": "${workspaceFolder}/TenCandlesOfBlazor/TenCandlesOfBlazor.csproj",
+        "buildWithSdk": true
+      }
+    }
+  ]
+}
